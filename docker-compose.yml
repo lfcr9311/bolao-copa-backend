@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: bolao_copa_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bolao_copa
+    ports:
+      - "5554:5432"
+    volumes:
+      - bolao_copa_data:/var/lib/postgresql/data
+
+volumes:
+  bolao_copa_data:
