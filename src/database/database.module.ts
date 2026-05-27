@@ -12,12 +12,17 @@ export const DATABASE_POOL = 'DATABASE_POOL'
       provide: DATABASE_POOL,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.getOrThrow<string>('DATABASE_URL')
+
         return new Pool({
-          connectionString: configService.getOrThrow<string>('DATABASE_URL')
+          connectionString: databaseUrl,
+          ssl: {
+            rejectUnauthorized: false,
+          },
         })
-      }
-    }
+      },
+    },
   ],
-  exports: [DATABASE_POOL]
+  exports: [DATABASE_POOL],
 })
 export class DatabaseModule {}
