@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common'
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common'
 import { DatabaseService } from '../database/database.service'
 
 @Injectable()
@@ -6,25 +6,31 @@ export class UsersService {
   constructor(private readonly db: DatabaseService) {}
 
   async create(name: string, email: string, passwordHash: string) {
-    try {
-      const result = await this.db.query(
-        `
-        INSERT INTO users (name, email, password_hash)
-        VALUES ($1, $2, $3)
-        RETURNING id, name, email, is_admin, created_at
-        `,
-        [name, email, passwordHash]
-      )
+  try {
+    const normalizedEmail = email.trim().toLowerCase()
 
-      return result.rows[0]
-    } catch (error: any) {
-      if (error.code === '23505') {
-        throw new ConflictException('E-mail já cadastrado')
-      }
-
-      throw error
+    if (normalizedEmail.endsWith('@voeazul.com.br')) {
+      throw new BadRequestException('E-mail corporativo voeazul.com.br não é permitido')
     }
+
+    const result = await this.db.query(
+      `
+      INSERT INTO users (name, email, password_hash)
+      VALUES ($1, $2, $3)
+      RETURNING id, name, email, is_admin, created_at
+      `,
+      [name, normalizedEmail, passwordHash]
+    )
+
+    return result.rows[0]
+  } catch (error: any) {
+    if (error.code === '23505') {
+      throw new ConflictException('E-mail já cadastrado')
+    }
+
+    throw error
   }
+}
 
   async findAll() {
     const result = await this.db.query(
