@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { AuthModule } from './auth/auth.module'
 import { DatabaseModule } from './database/database.module'
-import { FootballDataModule } from './football-data/football-data.module'
 import { MatchesModule } from './matches/matches.module'
 import { PredictionsModule } from './predictions/predictions.module'
 import { RankingModule } from './ranking/ranking.module'
@@ -20,8 +19,7 @@ import { UsersModule } from './users/users.module'
     TeamsModule,
     MatchesModule,
     PredictionsModule,
-    RankingModule,
-    FootballDataModule
+    RankingModule
   ]
 })
 export class AppModule {}
