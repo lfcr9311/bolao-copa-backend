@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common'
 import { MatchesService } from './matches.service'
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { AdminGuard } from '../auth/admin.guard'
 
 @Controller('matches')
 export class MatchesController {
@@ -25,7 +27,17 @@ export class MatchesController {
   }
 
   @Patch(':id/finish')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   finishMatch(
+    @Param('id') id: string,
+    @Body() body: { home_score: number; away_score: number }
+  ) {
+    return this.matchesService.finishMatch(id, body.home_score, body.away_score)
+  }
+
+  @Patch(':id/update-result')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  updateResult(
     @Param('id') id: string,
     @Body() body: { home_score: number; away_score: number }
   ) {

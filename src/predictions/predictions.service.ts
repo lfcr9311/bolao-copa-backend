@@ -168,11 +168,11 @@ export class PredictionsService {
     }
 
     const now = new Date()
-    const fiveMinutesInMs = 5 * 60 * 1000
-    const deadline = new Date(matchDate.getTime() - fiveMinutesInMs)
+    const thirtyMinutesInMs = 30 * 60 * 1000
+    const deadline = new Date(matchDate.getTime() - thirtyMinutesInMs)
 
     if (now >= deadline) {
-      throw new BadRequestException('Prazo de palpite encerrado. Só é possível criar ou alterar até 5 minutos antes da partida')
+      throw new BadRequestException('Prazo de palpite encerrado. Só é possível criar ou alterar até 30 minutos antes da partida')
     }
   }
 
