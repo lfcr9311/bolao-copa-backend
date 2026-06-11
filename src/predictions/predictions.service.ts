@@ -111,6 +111,32 @@ export class PredictionsService {
     return result.rows
   }
 
+  async findByMatch(matchId: string) {
+    const result = await this.db.query(
+      `
+      SELECT
+        p.id,
+        p.user_id,
+        p.match_id,
+        p.home_score AS predicted_home_score,
+        p.away_score AS predicted_away_score,
+        p.points,
+        p.exact_score,
+        p.correct_result,
+        p.correct_goal_difference,
+        u.name AS user_name,
+        u.email AS user_email
+      FROM predictions p
+      INNER JOIN users u ON u.id = p.user_id
+      WHERE p.match_id = $1
+      ORDER BY p.points DESC, u.name ASC
+      `,
+      [matchId]
+    )
+
+    return result.rows
+  }
+
   async calculatePointsForMatch(matchId: string, realHomeScore: number, realAwayScore: number) {
     this.validateScore(realHomeScore, 'Gols do mandante')
     this.validateScore(realAwayScore, 'Gols do visitante')
@@ -219,9 +245,9 @@ export class PredictionsService {
     if (exactScore) {
       points = 10
     } else if (correctResult && correctGoalDifference) {
-      points = 8
-    } else if (correctResult && correctAnyTeamGoals) {
       points = 6
+    } else if (correctResult && correctAnyTeamGoals) {
+      points = 8
     } else if (correctResult) {
       points = 5
     } else if (correctAnyTeamGoals) {

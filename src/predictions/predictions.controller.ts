@@ -27,4 +27,9 @@ export class PredictionsController {
   findByUser(@Param('userId') userId: string) {
     return this.predictionsService.findByUser(userId)
   }
+
+  @Get('match/:matchId')
+  findByMatch(@Param('matchId') matchId: string) {
+    return this.predictionsService.findByMatch(matchId)
+  }
 }
