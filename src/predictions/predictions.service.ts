@@ -141,6 +141,20 @@ export class PredictionsService {
     this.validateScore(realHomeScore, 'Gols do mandante')
     this.validateScore(realAwayScore, 'Gols do visitante')
 
+    const matchData = await this.db.query(
+      `
+      SELECT ht.code AS home_team_code, at.code AS away_team_code
+      FROM matches m
+      INNER JOIN teams ht ON ht.id = m.home_team_id
+      INNER JOIN teams at ON at.id = m.away_team_id
+      WHERE m.id = $1
+      `,
+      [matchId]
+    )
+
+    const isBrazilMatch =
+      matchData.rows[0]?.home_team_code === 'BRA' || matchData.rows[0]?.away_team_code === 'BRA'
+
     const predictions = await this.db.query(
       `
       SELECT *
@@ -155,7 +169,8 @@ export class PredictionsService {
         realHomeScore,
         realAwayScore,
         prediction.home_score,
-        prediction.away_score
+        prediction.away_score,
+        isBrazilMatch
       )
 
       await this.db.query(
@@ -220,7 +235,8 @@ export class PredictionsService {
     realHomeScore: number,
     realAwayScore: number,
     predictedHomeScore: number,
-    predictedAwayScore: number
+    predictedAwayScore: number,
+    isBrazilMatch: boolean = false
   ): PredictionPoints {
     const exactScore =
       realHomeScore === predictedHomeScore &&
@@ -242,16 +258,32 @@ export class PredictionsService {
 
     let points = 0
 
-    if (exactScore) {
-      points = 10
-    } else if (correctResult && correctGoalDifference) {
-      points = 6
-    } else if (correctResult && correctAnyTeamGoals) {
-      points = 8
-    } else if (correctResult) {
-      points = 5
-    } else if (correctAnyTeamGoals) {
-      points = 1
+    if (isBrazilMatch) {
+      if (exactScore) {
+        points = 10
+      } else if (correctResult && correctGoalDifference) {
+        points = 6
+      } else if (correctResult && correctAnyTeamGoals) {
+        points = 8
+      } else if (correctResult) {
+        points = 20
+      } else if (correctAnyTeamGoals) {
+        points = 1
+      } else {
+        points = -10
+      }
+    } else {
+      if (exactScore) {
+        points = 10
+      } else if (correctResult && correctGoalDifference) {
+        points = 6
+      } else if (correctResult && correctAnyTeamGoals) {
+        points = 8
+      } else if (correctResult) {
+        points = 5
+      } else if (correctAnyTeamGoals) {
+        points = 1
+      }
     }
 
     return {
