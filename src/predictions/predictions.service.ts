@@ -258,32 +258,16 @@ export class PredictionsService {
 
     let points = 0
 
-    if (isBrazilMatch) {
-      if (exactScore) {
-        points = 10
-      } else if (correctResult && correctGoalDifference) {
-        points = 6
-      } else if (correctResult && correctAnyTeamGoals) {
-        points = 8
-      } else if (correctResult) {
-        points = 20
-      } else if (correctAnyTeamGoals) {
-        points = 1
-      } else {
-        points = -10
-      }
-    } else {
-      if (exactScore) {
-        points = 10
-      } else if (correctResult && correctGoalDifference) {
-        points = 6
-      } else if (correctResult && correctAnyTeamGoals) {
-        points = 8
-      } else if (correctResult) {
-        points = 5
-      } else if (correctAnyTeamGoals) {
-        points = 1
-      }
+    if (exactScore) {
+      points = isBrazilMatch ? 15 : 10
+    } else if (correctResult && correctGoalDifference) {
+      points = 6
+    } else if (correctResult && correctAnyTeamGoals) {
+      points = 8
+    } else if (correctResult) {
+      points = 5
+    } else if (correctAnyTeamGoals) {
+      points = 1
     }
 
     return {
