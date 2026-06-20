@@ -97,11 +97,13 @@ export class PredictionsService {
         ht.name AS home_team_name,
         ht.code AS home_team_code,
         at.name AS away_team_name,
-        at.code AS away_team_code
+        at.code AS away_team_code,
+        u.photo
       FROM predictions p
       INNER JOIN matches m ON m.id = p.match_id
       INNER JOIN teams ht ON ht.id = m.home_team_id
       INNER JOIN teams at ON at.id = m.away_team_id
+      INNER JOIN users u ON u.id = p.user_id
       WHERE p.user_id = $1
       ORDER BY m.match_date ASC
       `,

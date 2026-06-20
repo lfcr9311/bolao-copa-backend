@@ -13,12 +13,11 @@ export const DATABASE_POOL = 'DATABASE_POOL'
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.getOrThrow<string>('DATABASE_URL')
+        const isLocalhost = databaseUrl.includes('localhost')
 
         return new Pool({
           connectionString: databaseUrl,
-          ssl: {
-            rejectUnauthorized: false,
-          },
+          ...(isLocalhost ? {} : { ssl: { rejectUnauthorized: false } }),
         })
       },
     },

@@ -12,13 +12,14 @@ export class RankingService {
         u.id,
         u.name,
         u.email,
+        u.photo,
         COALESCE(SUM(p.points), 0)::INT AS total_points,
         COALESCE(SUM(CASE WHEN p.exact_score = true THEN 1 ELSE 0 END), 0)::INT AS exact_scores,
         COALESCE(SUM(CASE WHEN p.correct_result = true THEN 1 ELSE 0 END), 0)::INT AS correct_results,
         COALESCE(SUM(CASE WHEN p.correct_goal_difference = true THEN 1 ELSE 0 END), 0)::INT AS correct_goal_differences
       FROM users u
       LEFT JOIN predictions p ON p.user_id = u.id
-      GROUP BY u.id, u.name, u.email
+      GROUP BY u.id, u.name, u.email, u.photo
       ORDER BY
         total_points DESC,
         exact_scores DESC,
