@@ -153,7 +153,8 @@ export class PredictionsService {
     )
 
     const isBrazilMatch =
-      matchData.rows[0]?.home_team_code === 'BRA' || matchData.rows[0]?.away_team_code === 'BRA'
+      matchData.rows[0]?.home_team_code?.trim().toUpperCase() === 'BRA' ||
+      matchData.rows[0]?.away_team_code?.trim().toUpperCase() === 'BRA'
 
     const predictions = await this.db.query(
       `
