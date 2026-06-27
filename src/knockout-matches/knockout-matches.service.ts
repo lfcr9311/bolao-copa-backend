@@ -24,6 +24,40 @@ type KnockoutPredictionPoints = {
 export class KnockoutMatchesService {
   constructor(private readonly db: DatabaseService) {}
 
+  async updateResult(matchId: string, result: {
+    home_score: number
+    away_score: number
+    home_score_extra_time?: number
+    away_score_extra_time?: number
+    home_penalties?: number
+    away_penalties?: number
+  }) {
+    await this.db.query(
+      `
+      UPDATE matches_knockout
+      SET
+        home_score = $1,
+        away_score = $2,
+        home_score_extra_time = $3,
+        away_score_extra_time = $4,
+        home_penalties = $5,
+        away_penalties = $6,
+        status = 'FINISHED',
+        updated_at = NOW()
+      WHERE id = $7
+      `,
+      [
+        result.home_score,
+        result.away_score,
+        result.home_score_extra_time ?? null,
+        result.away_score_extra_time ?? null,
+        result.home_penalties ?? null,
+        result.away_penalties ?? null,
+        matchId
+      ]
+    )
+  }
+
   async findAll() {
     const result = await this.db.query(
       `
