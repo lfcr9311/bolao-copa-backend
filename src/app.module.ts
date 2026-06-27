@@ -7,6 +7,7 @@ import { PredictionsModule } from './predictions/predictions.module'
 import { RankingModule } from './ranking/ranking.module'
 import { TeamsModule } from './teams/teams.module'
 import { UsersModule } from './users/users.module'
+import { KnockoutMatchesModule } from './knockout-matches/knockout-matches.module'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UsersModule } from './users/users.module'
     TeamsModule,
     MatchesModule,
     PredictionsModule,
+    KnockoutMatchesModule,
     RankingModule
   ]
 })
