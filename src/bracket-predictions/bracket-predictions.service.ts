@@ -89,6 +89,62 @@ export class BracketPredictionsService {
     return result.rows[0]
   }
 
+  async getPredictionsByMatchNumber(matchNumber: string, currentUserId?: string) {
+    // Busca o match para verificar se está dentro de 30 min antes do jogo
+    const matchResult = await this.db.query(
+      `
+      SELECT match_date FROM matches_knockout WHERE match_number = $1
+      `,
+      [parseInt(matchNumber)]
+    )
+
+    if (matchResult.rows.length === 0) {
+      throw new NotFoundException('Match not found')
+    }
+
+    const matchDate = new Date(matchResult.rows[0].match_date)
+    const now = new Date()
+    const thirtyMinutesBefore = new Date(matchDate.getTime() - 30 * 60 * 1000)
+
+    // Se ainda não chegou 30 min antes, retorna vazio
+    if (now < thirtyMinutesBefore) {
+      return {
+        canView: false,
+        message: 'Palpites serão visíveis 30 minutos antes do jogo',
+        predictions: []
+      }
+    }
+
+    // Busca todos os palpites desse match dos outros users
+    const predictions = await this.db.query(
+      `
+      SELECT
+        u.id, u.name, u.email,
+        bp.prediction_array,
+        (bp.prediction_array->$2)::text as predicted_team_id
+      FROM bracket_predictions bp
+      INNER JOIN users u ON u.id = bp.user_id
+      WHERE bp.prediction_array IS NOT NULL
+      AND bp.prediction_array ? $2
+      AND u.id != $3
+      ORDER BY u.name
+      `,
+      [matchNumber, matchNumber, currentUserId || 'none']
+    )
+
+    return {
+      canView: true,
+      matchNumber,
+      matchDate,
+      totalPredictions: predictions.rows.length,
+      predictions: predictions.rows.map(row => ({
+        userName: row.name,
+        userEmail: row.email,
+        predictedTeamId: row.predicted_team_id?.replace(/"/g, '') // Remove quotes do JSON
+      }))
+    }
+  }
+
   async getUserBracketResults(userId: string) {
     const result = await this.db.query(
       `

@@ -275,6 +275,60 @@ export class KnockoutMatchesService {
     return result.rows
   }
 
+  async getPredictionsVisible(matchId: string, currentUserId?: string) {
+    // Busca o match para verificar se está dentro de 30 min antes do jogo
+    const matchResult = await this.db.query(
+      `SELECT match_date FROM matches_knockout WHERE id = $1`,
+      [matchId]
+    )
+
+    if (matchResult.rows.length === 0) {
+      throw new NotFoundException('Match not found')
+    }
+
+    const matchDate = new Date(matchResult.rows[0].match_date)
+    const now = new Date()
+    const thirtyMinutesBefore = new Date(matchDate.getTime() - 30 * 60 * 1000)
+
+    // Se ainda não chegou 30 min antes, retorna vazio
+    if (now < thirtyMinutesBefore) {
+      return {
+        canView: false,
+        message: `Palpites serão visíveis em ${Math.ceil((thirtyMinutesBefore.getTime() - now.getTime()) / 60000)} minutos`,
+        predictions: []
+      }
+    }
+
+    // Busca todos os palpites desse match dos outros users
+    const predictions = await this.db.query(
+      `
+      SELECT
+        u.name,
+        u.email,
+        p.home_score,
+        p.away_score,
+        p.home_score_extra_time,
+        p.away_score_extra_time,
+        p.home_penalties,
+        p.away_penalties
+      FROM predictions_knockout p
+      INNER JOIN users u ON u.id = p.user_id
+      WHERE p.match_id = $1
+      AND u.id != $2
+      ORDER BY u.name
+      `,
+      [matchId, currentUserId || 'none']
+    )
+
+    return {
+      canView: true,
+      matchId,
+      matchDate,
+      totalPredictions: predictions.rows.length,
+      predictions: predictions.rows
+    }
+  }
+
   async calculatePointsForMatch(
     matchId: string,
     realHomeScore: number,

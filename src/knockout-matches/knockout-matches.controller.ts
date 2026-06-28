@@ -50,6 +50,11 @@ export class KnockoutMatchesController {
     return this.knockoutMatchesService.findByMatch(matchId)
   }
 
+  @Get('predictions-visible/:matchId')
+  getPredictionsVisible(@Param('matchId') matchId: string, @Request() req) {
+    return this.knockoutMatchesService.getPredictionsVisible(matchId, req.user?.id)
+  }
+
   @Post(':matchId/calculate-points')
   calculatePoints(
     @Param('matchId') matchId: string,
