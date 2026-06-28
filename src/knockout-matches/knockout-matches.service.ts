@@ -300,8 +300,7 @@ export class KnockoutMatchesService {
     }
 
     // Busca todos os palpites desse match dos outros users
-    const predictions = await this.db.query(
-      `
+    let query = `
       SELECT
         u.name,
         u.email,
@@ -314,11 +313,18 @@ export class KnockoutMatchesService {
       FROM predictions_knockout p
       INNER JOIN users u ON u.id = p.user_id
       WHERE p.match_id = $1
-      AND u.id != $2
-      ORDER BY u.name
-      `,
-      [matchId, currentUserId || 'none']
-    )
+    `
+
+    const params: any[] = [matchId]
+
+    if (currentUserId) {
+      query += ` AND u.id != $${params.length + 1}`
+      params.push(currentUserId)
+    }
+
+    query += ` ORDER BY u.name`
+
+    const predictions = await this.db.query(query, params)
 
     return {
       canView: true,
