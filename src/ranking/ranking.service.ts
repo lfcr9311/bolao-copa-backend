@@ -30,4 +30,30 @@ export class RankingService {
 
     return result.rows
   }
+
+  async getKnockoutRanking() {
+    const result = await this.db.query(
+      `
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.photo,
+        COALESCE(SUM(pk.points), 0)::INT AS total_points,
+        COALESCE(SUM(CASE WHEN pk.correct_score_regular = true THEN 1 ELSE 0 END), 0)::INT AS exact_scores,
+        COALESCE(SUM(CASE WHEN pk.correct_result_regular = true THEN 1 ELSE 0 END), 0)::INT AS correct_results,
+        COALESCE(COUNT(pk.id), 0)::INT AS total_predictions
+      FROM users u
+      LEFT JOIN predictions_knockout pk ON pk.user_id = u.id
+      GROUP BY u.id, u.name, u.email, u.photo
+      ORDER BY
+        total_points DESC,
+        exact_scores DESC,
+        correct_results DESC,
+        u.name ASC
+      `
+    )
+
+    return result.rows
+  }
 }
