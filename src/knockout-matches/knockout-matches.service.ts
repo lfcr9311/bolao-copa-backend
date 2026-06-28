@@ -481,12 +481,15 @@ export class KnockoutMatchesService {
     pointsRegularTime = regularTimeResult.points
 
     // Alternative scenario calculation (only if the user provided alternative scenario)
-    if (
-      predictedHomeScoreExtraTime !== undefined ||
-      predictedAwayScoreExtraTime !== undefined ||
-      predictedHomePenalties !== undefined ||
-      predictedAwayPenalties !== undefined
-    ) {
+    // Só calcula se o tempo normal foi empate E o usuário forneceu prorrogação/pênalti
+    const normalTimeWasDraw = realHomeScore === realAwayScore
+    const userProvidedAlternative =
+      (predictedHomeScoreExtraTime !== undefined && predictedHomeScoreExtraTime !== null) ||
+      (predictedAwayScoreExtraTime !== undefined && predictedAwayScoreExtraTime !== null) ||
+      (predictedHomePenalties !== undefined && predictedHomePenalties !== null) ||
+      (predictedAwayPenalties !== undefined && predictedAwayPenalties !== null)
+
+    if (normalTimeWasDraw && userProvidedAlternative) {
       const alternativeResult = this.calculateAlternativeScenarioPoints(
         realHomeScore,
         realAwayScore,
