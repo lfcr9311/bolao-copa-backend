@@ -259,4 +259,73 @@ export class BracketPredictionsService {
       predictionsCount: Object.keys(predictionArray).length
     }
   }
+
+  async setResultsArray(userId: string, resultsArray: Record<string, string>) {
+    // Salva os resultados reais e calcula pontos
+    await this.db.query(
+      `
+      UPDATE bracket_predictions
+      SET results_array = $2, updated_at = NOW()
+      WHERE user_id = $1 AND match_id IS NULL
+      `,
+      [userId, JSON.stringify(resultsArray)]
+    )
+
+    // Calccula pontos: compara prediction_array vs results_array
+    const result = await this.db.query(
+      `
+      SELECT prediction_array, results_array
+      FROM bracket_predictions
+      WHERE user_id = $1 AND match_id IS NULL
+      `,
+      [userId]
+    )
+
+    if (result.rows.length === 0) {
+      throw new NotFoundException('Bracket predictions not found for this user')
+    }
+
+    const record = result.rows[0]
+    const predictions: Record<string, string> = record.prediction_array || {}
+    const results: Record<string, string> = record.results_array || {}
+
+    // Conta quantos acertos
+    let correctCount = 0
+    const roundPoints: Record<string, number> = {
+      '73': 1, '74': 1, '75': 1, '76': 1, '77': 1, '78': 1, '79': 1, '80': 1,
+      '81': 1, '82': 1, '83': 1, '84': 1, '85': 1, '86': 1, '87': 1, '88': 1,
+      '89': 2, '90': 2, '91': 2, '92': 2, '93': 2, '94': 2, '95': 2, '96': 2,
+      '97': 4, '98': 4, '99': 4, '100': 4,
+      '101': 8, '102': 8,
+      '104': 16,
+    }
+
+    let totalPoints = 0
+    for (const [matchNum, predictedTeam] of Object.entries(predictions)) {
+      const actualTeam = results[matchNum]
+      if (predictedTeam === actualTeam) {
+        correctCount++
+        totalPoints += roundPoints[matchNum] || 1
+      }
+    }
+
+    // Salva pontos
+    await this.db.query(
+      `
+      UPDATE bracket_predictions
+      SET points = $2, is_correct = true, updated_at = NOW()
+      WHERE user_id = $1 AND match_id IS NULL
+      `,
+      [userId, totalPoints]
+    )
+
+    return {
+      success: true,
+      message: 'Resultados salvos e pontos calculados',
+      userId,
+      correctPredictions: correctCount,
+      totalPredictions: Object.keys(predictions).length,
+      totalPoints
+    }
+  }
 }

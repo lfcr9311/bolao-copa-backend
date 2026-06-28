@@ -72,4 +72,17 @@ export class BracketPredictionsController {
   async getUserStats(@Param('userId') userId: string) {
     return this.bracketPredictionsService.getUserBracketStats(userId)
   }
+
+  @Post('set-results')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async setResults(
+    @Request() req,
+    @Body() body: { userId: string; resultsArray: Record<string, string> }
+  ) {
+    if (!body.userId || !body.resultsArray) {
+      throw new BadRequestException('userId and resultsArray are required')
+    }
+
+    return this.bracketPredictionsService.setResultsArray(body.userId, body.resultsArray)
+  }
 }
