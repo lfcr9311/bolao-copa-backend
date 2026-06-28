@@ -74,6 +74,7 @@ export class KnockoutMatchesService {
         to_char(m.match_date, 'YYYY-MM-DD"T"HH24:MI:SS') || 'Z' AS match_date,
         m.status,
         m.round,
+        m.match_number,
         m.advance_team_id,
         ht.name AS home_team_name,
         ht.code AS home_team_code,
@@ -82,7 +83,7 @@ export class KnockoutMatchesService {
       FROM matches_knockout m
       INNER JOIN teams ht ON ht.id = m.home_team_id
       INNER JOIN teams at ON at.id = m.away_team_id
-      ORDER BY m.match_date ASC
+      ORDER BY COALESCE(m.match_number, 0), m.match_date ASC
       `
     )
 

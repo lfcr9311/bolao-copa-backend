@@ -8,6 +8,7 @@ import { RankingModule } from './ranking/ranking.module'
 import { TeamsModule } from './teams/teams.module'
 import { UsersModule } from './users/users.module'
 import { KnockoutMatchesModule } from './knockout-matches/knockout-matches.module'
+import { BracketPredictionsModule } from './bracket-predictions/bracket-predictions.module'
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { KnockoutMatchesModule } from './knockout-matches/knockout-matches.modul
     MatchesModule,
     PredictionsModule,
     KnockoutMatchesModule,
+    BracketPredictionsModule,
     RankingModule
   ]
 })
