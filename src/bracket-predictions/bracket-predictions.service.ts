@@ -67,6 +67,28 @@ export class BracketPredictionsService {
     return result.rows[0]
   }
 
+  async getBracketPredictionsArray(userId: string) {
+    const result = await this.db.query(
+      `
+      SELECT prediction_array, results_array, points, is_correct
+      FROM bracket_predictions
+      WHERE user_id = $1 AND match_id IS NULL
+      `,
+      [userId]
+    )
+
+    if (result.rows.length === 0) {
+      return {
+        prediction_array: null,
+        results_array: null,
+        points: 0,
+        is_correct: false
+      }
+    }
+
+    return result.rows[0]
+  }
+
   async getPredictionsByUser(userId: string) {
     const result = await this.db.query(
       `
@@ -235,14 +257,17 @@ export class BracketPredictionsService {
       throw new BadRequestException('Prazo encerrado! Palpites do bracket só podem ser salvos até 28/06 às 20:00 UTC')
     }
 
-    // Salva o array completo de palpites do bracket (73-104)
+    // Deleta palpites antigos do bracket (match_id IS NULL)
+    await this.db.query(
+      `DELETE FROM bracket_predictions WHERE user_id = $1 AND match_id IS NULL`,
+      [userId]
+    )
+
+    // Insere novo registro com prediction_array
     await this.db.query(
       `
       INSERT INTO bracket_predictions (id, user_id, match_id, predicted_team_id, prediction_array, points, is_correct, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, 0, false, NOW(), NOW())
-      ON CONFLICT (user_id, match_id) DO UPDATE SET
-        prediction_array = $5,
-        updated_at = NOW()
       `,
       [
         require('crypto').randomUUID(),

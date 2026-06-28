@@ -46,6 +46,12 @@ export class BracketPredictionsController {
     return this.bracketPredictionsService.getPredictionsByUser(req.user.id)
   }
 
+  @Get('my-bracket')
+  @UseGuards(JwtAuthGuard)
+  async getMyBracketPredictions(@Request() req) {
+    return this.bracketPredictionsService.getBracketPredictionsArray(req.user.id)
+  }
+
   @Get('match/:matchId')
   async getPredictionsByMatch(@Param('matchId') matchId: string) {
     return this.bracketPredictionsService.getPredictionsByMatch(matchId)
