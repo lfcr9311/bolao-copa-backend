@@ -89,6 +89,58 @@ export class BracketPredictionsService {
     return result.rows[0]
   }
 
+  async getUserBracketResults(userId: string) {
+    const result = await this.db.query(
+      `
+      SELECT u.name, u.email, bp.prediction_array, bp.results_array, bp.points, bp.is_correct, bp.created_at, bp.updated_at
+      FROM bracket_predictions bp
+      INNER JOIN users u ON u.id = bp.user_id
+      WHERE bp.user_id = $1 AND bp.match_id IS NULL
+      `,
+      [userId]
+    )
+
+    if (result.rows.length === 0) {
+      return {
+        name: null,
+        email: null,
+        prediction_array: null,
+        results_array: null,
+        points: 0,
+        is_correct: false,
+        correctPredictions: 0,
+        totalPredictions: 0,
+        message: 'Nenhum palpite de bracket encontrado para este usuário'
+      }
+    }
+
+    const record = result.rows[0]
+    const predictions: Record<string, string> = record.prediction_array || {}
+    const results: Record<string, string> = record.results_array || {}
+
+    // Conta acertos
+    let correctCount = 0
+    for (const [matchNum, predictedTeam] of Object.entries(predictions)) {
+      const actualTeam = results[matchNum]
+      if (actualTeam && predictedTeam === actualTeam) {
+        correctCount++
+      }
+    }
+
+    return {
+      name: record.name,
+      email: record.email,
+      prediction_array: predictions,
+      results_array: results,
+      points: record.points || 0,
+      is_correct: record.is_correct || false,
+      correctPredictions: correctCount,
+      totalPredictions: Object.keys(predictions).length,
+      createdAt: record.created_at,
+      updatedAt: record.updated_at
+    }
+  }
+
   async getPredictionsByUser(userId: string) {
     const result = await this.db.query(
       `
