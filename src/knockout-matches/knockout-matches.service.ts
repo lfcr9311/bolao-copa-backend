@@ -309,7 +309,9 @@ export class KnockoutMatchesService {
         p.home_score_extra_time,
         p.away_score_extra_time,
         p.home_penalties,
-        p.away_penalties
+        p.away_penalties,
+        p.points,
+        p.correct_score_regular
       FROM predictions_knockout p
       INNER JOIN users u ON u.id = p.user_id
       WHERE p.match_id = $1
