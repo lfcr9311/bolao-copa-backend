@@ -14,4 +14,9 @@ export class RankingController {
   getKnockoutRanking() {
     return this.rankingService.getKnockoutRanking()
   }
+
+  @Get('general')
+  getGeneralRanking() {
+    return this.rankingService.getGeneralRanking()
+  }
 }

@@ -56,4 +56,30 @@ export class RankingService {
 
     return result.rows
   }
+
+  async getGeneralRanking() {
+    const result = await this.db.query(
+      `
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.photo,
+        COALESCE(SUM(p.points), 0)::INT AS grupos_points,
+        COALESCE(SUM(pk.points), 0)::INT AS knockout_points,
+        COALESCE(bp.points, 0)::INT AS bracket_points,
+        (COALESCE(SUM(p.points), 0) + COALESCE(SUM(pk.points), 0) + COALESCE(bp.points, 0))::INT AS total_points
+      FROM users u
+      LEFT JOIN predictions p ON p.user_id = u.id
+      LEFT JOIN predictions_knockout pk ON pk.user_id = u.id
+      LEFT JOIN bracket_predictions bp ON bp.user_id = u.id AND bp.match_id IS NULL
+      GROUP BY u.id, u.name, u.email, u.photo, bp.points
+      ORDER BY
+        total_points DESC,
+        u.name ASC
+      `
+    )
+
+    return result.rows
+  }
 }

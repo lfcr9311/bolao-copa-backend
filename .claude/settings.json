@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /home/luisrossi/Documents -maxdepth 2 -type d -name \"*frontend*\" -o -name \"*web*\" -o -name \"*bolao*\" 2>/dev/null | grep -v node_modules | grep -v \".git\")",
+      "Read(//home/luisrossi/Documents/**)",
+      "Bash(find /home/luisrossi/Documents/bolao-frontend -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\" \\\\\\) | grep -i \"bracket\\\\|ranking\\\\|mata\" | head -20)",
+      "Read(//home/luisrossi/Documents/bolao-frontend/**)",
+      "Read(//home/luisrossi/Documents/bolao-frontend/src/components/**)",
+      "Bash(grep -r \"BracketLeaderboard\" /home/luisrossi/Documents/bolao-frontend/src --include=\"*.tsx\" --include=\"*.ts\")",
+      "Read(//home/luisrossi/Documents/bolao-frontend/src/**)",
+      "Bash(grep -n \"BracketLeaderboard\" /home/luisrossi/Documents/bolao-frontend/src/App.tsx -A 5 -B 5)"
+    ],
+    "additionalDirectories": [
+      "/home/luisrossi/Documents/bolao-frontend/src"
+    ]
+  }
+}
