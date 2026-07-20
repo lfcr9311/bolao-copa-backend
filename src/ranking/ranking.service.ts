@@ -67,18 +67,15 @@ export class RankingService {
         u.photo,
         (SELECT COALESCE(SUM(points), 0)::INT FROM predictions WHERE user_id = u.id) AS grupos_points,
         (SELECT COALESCE(SUM(points), 0)::INT FROM predictions_knockout WHERE user_id = u.id) AS knockout_points,
-        (SELECT COALESCE(points, 0)::INT FROM bracket_predictions WHERE user_id = u.id AND match_id IS NULL) AS bracket_points
-      FROM users u
-      ORDER BY
+        (SELECT COALESCE(points, 0)::INT FROM bracket_predictions WHERE user_id = u.id AND match_id IS NULL) AS bracket_points,
         ((SELECT COALESCE(SUM(points), 0) FROM predictions WHERE user_id = u.id) +
          (SELECT COALESCE(SUM(points), 0) FROM predictions_knockout WHERE user_id = u.id) +
-         (SELECT COALESCE(points, 0) FROM bracket_predictions WHERE user_id = u.id AND match_id IS NULL)) DESC
+         (SELECT COALESCE(points, 0) FROM bracket_predictions WHERE user_id = u.id AND match_id IS NULL))::INT AS total_points
+      FROM users u
+      ORDER BY total_points DESC, u.name ASC
       `
     )
 
-    return result.rows.map(row => ({
-      ...row,
-      total_points: (row.grupos_points + row.knockout_points + row.bracket_points)
-    }))
+    return result.rows
   }
 }

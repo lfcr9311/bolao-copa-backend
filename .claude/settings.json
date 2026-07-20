@@ -8,10 +8,14 @@
       "Read(//home/luisrossi/Documents/bolao-frontend/src/components/**)",
       "Bash(grep -r \"BracketLeaderboard\" /home/luisrossi/Documents/bolao-frontend/src --include=\"*.tsx\" --include=\"*.ts\")",
       "Read(//home/luisrossi/Documents/bolao-frontend/src/**)",
-      "Bash(grep -n \"BracketLeaderboard\" /home/luisrossi/Documents/bolao-frontend/src/App.tsx -A 5 -B 5)"
+      "Bash(grep -n \"BracketLeaderboard\" /home/luisrossi/Documents/bolao-frontend/src/App.tsx -A 5 -B 5)",
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(npm run ts-node -- -e ' *)",
+      "Bash(chmod +x /tmp/claude-1000/-home-luisrossi-Documents-bolao-copa-backend/3c9939fc-3251-48fe-9026-581c3d7234e1/scratchpad/update_all_knockout.sh)"
     ],
     "additionalDirectories": [
-      "/home/luisrossi/Documents/bolao-frontend/src"
+      "/home/luisrossi/Documents/bolao-frontend/src",
+      "/home/luisrossi/Documents/bolao-frontend/src/components"
     ]
   }
 }
