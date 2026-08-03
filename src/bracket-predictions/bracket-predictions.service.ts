@@ -1,15 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { DatabaseService } from '../database/database.service'
+import { randomUUID } from 'crypto'
 
 type RoundPoints = Record<string, number>
 
+// Potências de 2 para cada fase do mata-mata
 const ROUND_POINTS: RoundPoints = {
   'Round 32': 1,
   'Round of 16': 2,
   'Quarter-final': 4,
   'Semi-final': 8,
-  'Final': 16,
-  'Match for third place': 1,
+  'Match for third place': 16,
+  'Final': 32,
 }
 
 @Injectable()
@@ -82,7 +84,7 @@ export class BracketPredictionsService {
         prediction_array: null,
         results_array: null,
         points: 0,
-        is_correct: false
+        is_correct: false,
       }
     }
 
@@ -90,12 +92,11 @@ export class BracketPredictionsService {
   }
 
   async getPredictionsByMatchNumber(matchNumber: string, currentUserId?: string) {
-    // Busca o match para verificar se está dentro de 30 min antes do jogo
     const matchResult = await this.db.query(
       `
       SELECT match_date FROM matches_knockout WHERE match_number = $1
       `,
-      [parseInt(matchNumber)]
+      [parseInt(matchNumber, 10)]
     )
 
     if (matchResult.rows.length === 0) {
@@ -106,16 +107,14 @@ export class BracketPredictionsService {
     const now = new Date()
     const thirtyMinutesBefore = new Date(matchDate.getTime() - 30 * 60 * 1000)
 
-    // Se ainda não chegou 30 min antes, retorna vazio
     if (now < thirtyMinutesBefore) {
       return {
         canView: false,
         message: 'Palpites serão visíveis 30 minutos antes do jogo',
-        predictions: []
+        predictions: [],
       }
     }
 
-    // Busca todos os palpites desse match dos outros users
     const predictions = await this.db.query(
       `
       SELECT
@@ -140,8 +139,8 @@ export class BracketPredictionsService {
       predictions: predictions.rows.map(row => ({
         userName: row.name,
         userEmail: row.email,
-        predictedTeamId: row.predicted_team_id?.replace(/"/g, '') // Remove quotes do JSON
-      }))
+        predictedTeamId: row.predicted_team_id?.replace(/"/g, ''),
+      })),
     }
   }
 
@@ -166,7 +165,7 @@ export class BracketPredictionsService {
         is_correct: false,
         correctPredictions: 0,
         totalPredictions: 0,
-        message: 'Nenhum palpite de bracket encontrado para este usuário'
+        message: 'Nenhum palpite de bracket encontrado para este usuário',
       }
     }
 
@@ -174,7 +173,6 @@ export class BracketPredictionsService {
     const predictions: Record<string, string> = record.prediction_array || {}
     const results: Record<string, string> = record.results_array || {}
 
-    // Conta acertos
     let correctCount = 0
     for (const [matchNum, predictedTeam] of Object.entries(predictions)) {
       const actualTeam = results[matchNum]
@@ -193,7 +191,7 @@ export class BracketPredictionsService {
       correctPredictions: correctCount,
       totalPredictions: Object.keys(predictions).length,
       createdAt: record.created_at,
-      updatedAt: record.updated_at
+      updatedAt: record.updated_at,
     }
   }
 
@@ -261,7 +259,6 @@ export class BracketPredictionsService {
   }
 
   async calculatePointsForMatch(matchId: string) {
-    // Get match details
     const matchResult = await this.db.query(
       `
       SELECT id, round, advance_team_id, status
@@ -287,7 +284,6 @@ export class BracketPredictionsService {
 
     const points = ROUND_POINTS[match.round] || 0
 
-    // Update all predictions for this match
     await this.db.query(
       `
       UPDATE bracket_predictions
@@ -357,7 +353,6 @@ export class BracketPredictionsService {
   }
 
   async saveBracketPredictionsArray(userId: string, predictionArray: Record<string, string>) {
-    // Verifica limite de data/hora: 29/06 17:00 UTC
     const deadline = new Date('2026-06-29T17:00:00Z')
     const now = new Date()
 
@@ -365,20 +360,18 @@ export class BracketPredictionsService {
       throw new BadRequestException('Prazo encerrado! Palpites do bracket só podem ser salvos até 28/06 às 20:00 UTC')
     }
 
-    // Deleta palpites antigos do bracket (match_id IS NULL)
     await this.db.query(
       `DELETE FROM bracket_predictions WHERE user_id = $1 AND match_id IS NULL`,
       [userId]
     )
 
-    // Insere novo registro com prediction_array
     await this.db.query(
       `
       INSERT INTO bracket_predictions (id, user_id, match_id, predicted_team_id, prediction_array, points, is_correct, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, 0, false, NOW(), NOW())
       `,
       [
-        require('crypto').randomUUID(),
+        randomUUID(),
         userId,
         null,
         null,
@@ -389,12 +382,11 @@ export class BracketPredictionsService {
     return {
       success: true,
       message: 'Palpites do bracket salvos com sucesso',
-      predictionsCount: Object.keys(predictionArray).length
+      predictionsCount: Object.keys(predictionArray).length,
     }
   }
 
   async setResultsArray(userId: string, resultsArray: Record<string, string>) {
-    // Salva os resultados reais e calcula pontos
     await this.db.query(
       `
       UPDATE bracket_predictions
@@ -404,7 +396,6 @@ export class BracketPredictionsService {
       [userId, JSON.stringify(resultsArray)]
     )
 
-    // Calccula pontos: compara prediction_array vs results_array
     const result = await this.db.query(
       `
       SELECT prediction_array, results_array
@@ -422,27 +413,34 @@ export class BracketPredictionsService {
     const predictions: Record<string, string> = record.prediction_array || {}
     const results: Record<string, string> = record.results_array || {}
 
-    // Conta quantos acertos
-    let correctCount = 0
+    // Pontuação baseada em Potências de 2 ($2^0, 2^1, 2^2, 2^3, 2^4, 2^5$)
     const roundPoints: Record<string, number> = {
+      // 16 avos (Round 32) -> 1 ponto ($2^0$)
       '73': 1, '74': 1, '75': 1, '76': 1, '77': 1, '78': 1, '79': 1, '80': 1,
       '81': 1, '82': 1, '83': 1, '84': 1, '85': 1, '86': 1, '87': 1, '88': 1,
+      // Oitavas (Round of 16) -> 2 pontos ($2^1$)
       '89': 2, '90': 2, '91': 2, '92': 2, '93': 2, '94': 2, '95': 2, '96': 2,
+      // Quartas (Quarter-finals) -> 4 pontos ($2^2$)
       '97': 4, '98': 4, '99': 4, '100': 4,
+      // Semifinais (Semi-finals) -> 8 pontos ($2^3$)
       '101': 8, '102': 8,
-      '104': 16,
+      // Terceiro Lugar -> 16 pontos ($2^4$)
+      '103': 16,
+      // Final -> 32 pontos ($2^5$)
+      '104': 32,
     }
 
+    let correctCount = 0
     let totalPoints = 0
+
     for (const [matchNum, predictedTeam] of Object.entries(predictions)) {
       const actualTeam = results[matchNum]
-      if (predictedTeam === actualTeam) {
+      if (predictedTeam && actualTeam && predictedTeam === actualTeam) {
         correctCount++
         totalPoints += roundPoints[matchNum] || 1
       }
     }
 
-    // Salva pontos
     await this.db.query(
       `
       UPDATE bracket_predictions
@@ -458,7 +456,7 @@ export class BracketPredictionsService {
       userId,
       correctPredictions: correctCount,
       totalPredictions: Object.keys(predictions).length,
-      totalPoints
+      totalPoints,
     }
   }
 }
