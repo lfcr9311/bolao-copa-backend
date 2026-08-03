@@ -415,20 +415,26 @@ export class BracketPredictionsService {
 
     // Pontuação baseada em Potências de 2 ($2^0, 2^1, 2^2, 2^3, 2^4, 2^5$)
     const roundPoints: Record<string, number> = {
-      // 16 avos (Round 32) -> 1 ponto ($2^0$)
-      '73': 1, '74': 1, '75': 1, '76': 1, '77': 1, '78': 1, '79': 1, '80': 1,
-      '81': 1, '82': 1, '83': 1, '84': 1, '85': 1, '86': 1, '87': 1, '88': 1,
-      // Oitavas (Round of 16) -> 2 pontos ($2^1$)
-      '89': 2, '90': 2, '91': 2, '92': 2, '93': 2, '94': 2, '95': 2, '96': 2,
-      // Quartas (Quarter-finals) -> 4 pontos ($2^2$)
-      '97': 4, '98': 4, '99': 4, '100': 4,
-      // Semifinais (Semi-finals) -> 8 pontos ($2^3$)
-      '101': 8, '102': 8,
-      // Terceiro Lugar -> 16 pontos ($2^4$)
-      '103': 16,
-      // Final -> 32 pontos ($2^5$)
-      '104': 32,
-    }
+  // 16-avos (Round 32) -> 1 ponto
+  '73': 1, '74': 1, '75': 1, '76': 1, '77': 1, '78': 1, '79': 1, '80': 1,
+  '81': 1, '82': 1, '83': 1, '84': 1, '85': 1, '86': 1, '87': 1, '88': 1,
+
+  // Oitavas (Round of 16) -> 2 pontos
+  'R16-89': 2, 'R16-90': 2, 'R16-91': 2, 'R16-92': 2,
+  'R16-93': 2, 'R16-94': 2, 'R16-95': 2, 'R16-96': 2,
+
+  // Quartas (Quarter-finals) -> 4 pontos
+  'QF-97': 4, 'QF-98': 4, 'QF-99': 4, 'QF-100': 4,
+
+  // Semifinais (Semi-finals) -> 8 pontos
+  'SF-101': 8, 'SF-102': 8,
+
+  // 3º Lugar -> 16 pontos (se houver)
+  '3RD-103': 16,
+
+  // Final -> 32 pontos
+  'FINAL-104': 32,
+}
 
     let correctCount = 0
     let totalPoints = 0
